@@ -1,0 +1,143 @@
+/* Original: https://korbi.cc/cdn/css/config.css */
+
+html {
+    overflow: hidden;
+}
+
+html {
+    height: -webkit-fill-available;
+}
+
+body {
+    background: #000;
+}
+
+body {
+    -webkit-touch-callout: none;
+}
+
+body {
+    -webkit-user-drag: none;
+}
+
+body {
+    -webkit-user-select: none;
+}
+
+body {
+    -khtml-user-select: none;
+}
+
+body {
+    -moz-user-select: none;
+}
+
+body {
+    -ms-user-select: none;
+}
+
+body {
+    -o-user-select: none;
+}
+
+body {
+    user-select: none;
+}
+
+body {
+    margin-left: 0;
+}
+
+body {
+    margin-bottom: 0;
+}
+
+body {
+    margin-right: 0;
+}
+
+body {
+    margin-top: 0;
+}
+
+body {
+    padding-left: 0;
+}
+
+body {
+    padding-bottom: 0;
+}
+
+body {
+    padding-right: 0;
+}
+
+body {
+    padding-top: 0;
+}
+
+@font-face {
+    font-family: "mc";
+    src: url("./assets/regular.otf");
+}
+
+[class~=footer],
+a:visited,
+a:hover,
+a:link {
+    color: #fff;
+}
+
+a:link,
+a:visited,
+a:hover {
+    background-color: transparent;
+}
+
+[class~=footer] {
+    z-index: 1;
+}
+
+[class~=footer] {
+    bottom: 0;
+}
+
+[class~=footer] {
+    left: 50%;
+}
+
+[class~=footer] {
+    position: absolute;
+}
+
+[class~=footer] {
+    transform: translate(-50%, -50%);
+}
+
+[class~=footer] {
+    font-size: 1.375pc;
+}
+
+[class~=footer] {
+    text-align: center;
+}
+
+a:link {
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+a:visited {
+    text-decoration: none;
+}
+
+[class~=footer] {
+    font-family: "mc";
+}
+
+[class~=footer] {
+    pointer-events: all;
+}
