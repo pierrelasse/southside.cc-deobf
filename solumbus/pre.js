@@ -5,8 +5,8 @@ document.write('<!DOCTYPE html><html><head> <title>恨</title> <meta charset="UT
 const video = document.getElementById('video');
 video.src = bg;
 
-const audio = document.getElementById('audio');
-audio.src = music;
+// const audio = document.getElementById('audio');
+// audio.src = music;
 
 const logo = document.querySelector('.logo');
 logo.src = pfp;

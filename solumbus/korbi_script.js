@@ -12,9 +12,9 @@ document.querySelectorAll('video').forEach(i => {
     i.disablePictureInPicture = true;
 });
 
-document.querySelectorAll('audio').forEach(i => {
-    i.loop = true;
-});
+// document.querySelectorAll('audio').forEach(i => {
+//     i.loop = true;
+// });
 
 window.addEventListener('load', () => {
     setTimeout(() => {
@@ -34,16 +34,16 @@ document.getElementById('enter').addEventListener('click', () => {
     });
 
     document.getElementById('video').play();
-    // document.getElementById('audio').play(); // Idk why it's in there but audio is not defined bec it comes from the vid itself
+    // document.getElementById('audio').play();
 });
 
 const videoElement = document.getElementById('video');
 videoElement.volume = 0;
-const audoElement = document.getElementById('audio');
-audoElement.volume = 0;
+// const audoElement = document.getElementById('audio');
+// audoElement.volume = 0;
 const volumeElement = document.getElementById('volume');
 volumeElement.volume = 0;
 volumeElement.addEventListener('input', i => {
     videoElement.volume = i.currentTarget.value / 100;
-    audoElement.volume = i.currentTarget.value / 100;
+    // audoElement.volume = i.currentTarget.value / 100;
 });

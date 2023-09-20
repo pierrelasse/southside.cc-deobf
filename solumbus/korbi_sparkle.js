@@ -8,6 +8,9 @@ const tiny = [];
 const tiny_x = [];
 const tiny_y = [];
 const tiny_remaining_ticks = [];
+const sparkles = 250;
+const sparkle_lifetime = 30;
+const sparkle_distance = 30;
 let doc_height;
 let doc_width;
 let sparkles_enabled = null;
@@ -28,7 +31,7 @@ function sparkle(arg1 = null) {
         sparkles_enabled = !!arg1;
     }
 
-    if (sparkles_enabled && star.length < 250) {
+    if (sparkles_enabled && star.length < sparkles) {
         sparkle_init();
     }
 }
@@ -50,304 +53,233 @@ function sparkle_destroy() {
 }
 
 function sparkle_init() {
-    function createSparkleElement(height, width) {
-        const el = document.createElement("div");
-        el.style.position = "absolute";
-        el.style.height = height + "px";
-        el.style.width = width + "px";
-        el.style.overflow = "hidden";
-        return el;
+    function create_div(height, width) {
+        const div = document.createElement("div");
+        div.style.position = "absolute";
+        div.style.height = height + "px";
+        div.style.width = width + "px";
+        div.style.overflow = "hidden";
+        return div;
     }
 
-    for (let i = 0; i < 250; i++) {
-        const sparkle = createSparkleElement(3, 3);
+    for (let i = 0; i < sparkles; i++) {
+        const sparkle = create_div(3, 3);
         sparkle.style.visibility = "hidden";
         sparkle.style.zIndex = "999";
+
         if (tiny[i]) {
             document.body.removeChild(tiny[i]);
         }
+
         document.body.appendChild(sparkle);
         tiny[i] = sparkle;
         tiny_remaining_ticks[i] = null;
-        const sparkle1 = createSparkleElement(5, 5);
-        sparkle1.style.backgroundColor = "transparent";
-        sparkle1.style.visibility = "hidden";
-        sparkle1.style.zIndex = "999";
-        const sparkle2 = createSparkleElement(1, 5);
-        const sparkle3 = createSparkleElement(5, 1);
-        sparkle1.appendChild(sparkle2);
-        sparkle1.appendChild(sparkle3);
-        sparkle2.style.top = "2px";
-        sparkle2.style.left = "0px";
-        sparkle3.style.top = "0px";
-        sparkle3.style.left = "2px";
+
+        const star_div = create_div(5, 5);
+        star_div.style.backgroundColor = "transparent";
+        star_div.style.visibility = "hidden";
+        star_div.style.zIndex = "999";
+
+        const bar_horiz = create_div(1, 5);
+        const bar_vert = create_div(5, 1);
+        star_div.appendChild(bar_horiz);
+        star_div.appendChild(bar_vert);
+        bar_horiz.style.top = "2px";
+        bar_horiz.style.left = "0px";
+        bar_vert.style.top = "0px";
+        bar_vert.style.left = "2px";
+
         if (star[i]) {
             document.body.removeChild(star[i]);
         }
-        document.body.appendChild(sparkle1);
-        star[i] = sparkle1;
+        
+        document.body.appendChild(star_div);
+        star[i] = star_div;
         star_remaining_ticks[i] = null;
     }
 
     window.addEventListener("resize", function () {
-        for (let i = 0; i < 250; i++) {
-            const loopList = ['0', '2', '6', '3', '4', '1', '7', '5'];
-            let iter = 0;
-            while (true) {
-                switch (loopList[iter++]) {
-                    case "0":
-                        star_remaining_ticks[i] = null;
-                        continue;
-                    case "1":
-                        tiny[i].style.top = "0px";
-                        continue;
-                    case "2":
-                        star[i].style.left = "0px";
-                        continue;
-                    case "3":
-                        star[i].style.visibility = "hidden";
-                        continue;
-                    case "4":
-                        tiny_remaining_ticks[i] = null;
-                        continue;
-                    case "5":
-                        tiny[i].style.visibility = "hidden";
-                        continue;
-                    case "6":
-                        star[i].style.top = "0px";
-                        continue;
-                    case "7":
-                        tiny[i].style.left = "0px";
-                        continue;
-                }
-                break;
-            }
+        for (let i = 0; i < sparkles; i++) {
+            star_remaining_ticks[i] = null;
+            star[i].style.left = "0px";
+            star[i].style.top = "0px";
+            star[i].style.visibility = "hidden";
+
+            tiny_remaining_ticks[i] = null;
+            tiny[i].style.top = '0px';
+            tiny[i].style.left = '0px';
+            tiny[i].style.visibility = "hidden";
         }
+
         doc_height = document.documentElement.scrollHeight;
         doc_width = document.documentElement.scrollWidth;
     });
 
-    document.onmousemove = function (arg1) {
-        if (sparkles_enabled && !arg1.buttons) {
-            const _0x984ex67 = Math.sqrt(Math.pow(arg1.movementX, 2) + Math.pow(arg1.movementY, 2));
-            const _0x984ex68 = arg1.movementX * 30 * 2 / _0x984ex67;
-            const _0x984ex69 = arg1.movementY * 30 * 2 / _0x984ex67;
-            const _0x984ex6a = _0x984ex67 / 30;
-            let i = 0;
-            let iy = arg1.pageY;
-            let ix = arg1.pageX;
-            while (Math.abs(i) < Math.abs(arg1.movementX)) {
-                create_star(ix, iy, _0x984ex6a);
-                let _0x984ex6e = Math.random();
-                ix -= _0x984ex68 * _0x984ex6e;
-                iy -= _0x984ex69 * _0x984ex6e;
-                i += _0x984ex68 * _0x984ex6e;
+    document.onmousemove = function (e) {
+        if (sparkles_enabled && !e.buttons) {
+            const distance = Math.sqrt(Math.pow(e.movementX, 2) + Math.pow(e.movementY, 2));
+            const delta_x = e.movementX * sparkle_distance * 2 / distance;
+            const delta_y = e.movementY * sparkle_distance * 2 / distance;
+            const probability = distance / sparkle_distance;
+            let cumulative_x = 0;
+
+            let mouse_y = e.pageY;
+            let mouse_x = e.pageX;
+
+            while (Math.abs(cumulative_x) < Math.abs(e.movementX)) {
+                create_star(mouse_x, mouse_y, probability);
+
+                let delta = Math.random();
+                mouse_x -= delta_x * delta;
+                mouse_y -= delta_y * delta;
+                cumulative_x += delta_x * delta;
             }
         }
     };
 }
-function animate_sparkles(arg1 = 60) {
-    let a = 0;
+
+function animate_sparkles(fps = 60) {
+    let alive = 0;
+
     for (let i = 0; i < star.length; i++) {
-        a += update_star(i);
+        alive += update_star(i);
     }
+
     for (let i = 0; i < tiny.length; i++) {
-        a += update_tiny(i);
+        alive += update_tiny(i);
     }
-    if (a === 0 && !sparkles_enabled) {
+
+    if (alive === 0 && !sparkles_enabled) {
         sparkle_destroy();
     }
-    setTimeout("animate_sparkles(" + arg1 + ")", 1e3 / arg1);
+
+    setTimeout("animate_sparkles(" + fps + ")", 1000 / fps);
 }
 
-function create_star(arg1, arg2, arg3 = 1) {
-    if (arg1 + 5 >= doc_width || arg2 + 5 >= doc_height) {
+function create_star(x, y, probability = 1) {
+    if (x + 5 >= doc_width || y + 5 >= doc_height) {
         return;
     }
-    if (Math.random() > arg3) {
+
+    if (Math.random() > probability) {
         return;
     }
-    let _0x984exb4 = 61;
-    let _0x984exb5 = NaN;
-    for (let _0x984exb6 = 0; _0x984exb6 < 250; _0x984exb6++) {
-        if (!star_remaining_ticks[_0x984exb6]) {
-            _0x984exb4 = null;
-            _0x984exb5 = _0x984exb6;
+
+    let min_lifetime = sparkle_lifetime * 2 + 1;
+    let min_index = NaN;
+
+    for (let i = 0; i < sparkles; i++) {
+        if (!star_remaining_ticks[i]) {
+            min_lifetime = null;
+            min_index = i;
             break;
-        } else if (star_remaining_ticks[_0x984exb6] < _0x984exb4) {
-            _0x984exb4 = star_remaining_ticks[_0x984exb6];
-            _0x984exb5 = _0x984exb6;
+        } else if (star_remaining_ticks[i] < min_lifetime) {
+            min_lifetime = star_remaining_ticks[i];
+            min_index = i;
         }
     }
-    if (_0x984exb4) {
-        star_to_tiny(_0x984exb5);
+
+    if (min_lifetime) {
+        star_to_tiny(min_index);
     }
-    if (_0x984exb5 >= 0) {
-        const iterlist = ['8', '6', '1', '5', '3', '0', '7', '2', '4'];
-        let iter = 0;
-        while (true) {
-            switch (iterlist[iter++]) {
-                case "0":
-                    star[_0x984exb5].style.clip = "rect(0px, 5px, 5px, 0px)";
-                    continue;
-                case "1":
-                    star[_0x984exb5].style.left = arg1 + "px";
-                    continue;
-                case "2":
-                    star[_0x984exb5].style.visibility = "visible";
-                    continue;
-                case "3":
-                    star[_0x984exb5].style.top = arg2 + "px";
-                    continue;
-                case "4":
-                    return _0x984exb5;
-                case "5":
-                    star_y[_0x984exb5] = arg2;
-                    continue;
-                case "6":
-                    star_x[_0x984exb5] = arg1;
-                    continue;
-                case "7":
-                    star[_0x984exb5].childNodes[0].style.backgroundColor = star[_0x984exb5].childNodes[1].style.backgroundColor = "#ffffff";
-                    continue;
-                case "8":
-                    star_remaining_ticks[_0x984exb5] = 60;
-                    continue;
-            }
-            break;
-        }
+
+    if (min_index >= 0) {
+        star_remaining_ticks[min_index] = sparkle_lifetime * 2;
+        star_x[min_index] = x;
+        star[min_index].style.left = x + "px";
+        star_y[min_index] = y;
+        star[min_index].style.top = y + "px";
+        star[min_index].style.clip = "rect(0px, 5px, 5px, 0px)";
+        star[min_index].childNodes[0].style.backgroundColor = star[min_index].childNodes[1].style.backgroundColor = "#ffffff";
+        star[min_index].style.visibility = "visible";
+        return min_index;
     }
 }
 
-function update_star(arg1) {
-    if (star_remaining_ticks[arg1] === null) {
+function update_star(i) {
+    if (star_remaining_ticks[i] === null) {
         return false;
     }
-    star_remaining_ticks[arg1] -= 1;
-    if (star_remaining_ticks[arg1] === 0) {
-        star_to_tiny(arg1);
+
+    star_remaining_ticks[i] -= 1;
+
+    if (star_remaining_ticks[i] === 0) {
+        star_to_tiny(i);
         return false;
     }
-    if (star_remaining_ticks[arg1] === 30) {
-        star[arg1].style.clip = "rect(1px, 4px, 4px, 1px)";
+
+    if (star_remaining_ticks[i] === sparkle_lifetime) {
+        star[i].style.clip = "rect(1px, 4px, 4px, 1px)";
     }
-    if (star_remaining_ticks[arg1] > 0) {
-        star_y[arg1] += 1 + 3 * Math.random();
-        star_x[arg1] += (arg1 % 5 - 2) / 5;
-        if (star_y[arg1] + 5 < doc_height && star_x[arg1] + 5 < doc_width) {
-            star[arg1].style.top = star_y[arg1] + "px";
-            star[arg1].style.left = star_x[arg1] + "px";
+
+    if (star_remaining_ticks[i] > 0) {
+        star_y[i] += 1 + 3 * Math.random();
+        star_x[i] += (i % 5 - 2) / 5;
+
+        if (star_y[i] + 5 < doc_height && star_x[i] + 5 < doc_width) {
+            star[i].style.top = star_y[i] + "px";
+            star[i].style.left = star_x[i] + "px";
             return true;
         }
     }
-    star_remaining_ticks[arg1] = null;
-    star[arg1].style.left = "0px";
-    star[arg1].style.top = "0px";
-    star[arg1].style.visibility = "hidden";
+    
+    star_remaining_ticks[i] = null;
+    star[i].style.left = "0px";
+    star[i].style.top = "0px";
+    star[i].style.visibility = "hidden";
     return false;
 }
 
-function star_to_tiny(arg1) {
-    if (star_remaining_ticks[arg1] === null) {
+function star_to_tiny(i) {
+    if (star_remaining_ticks[i] === null) {
         return;
     }
-    if (star_y[arg1] + 3 < doc_height && star_x[arg1] + 3 < doc_width) {
-        const iterlist = ['1', '4', '7', '3', '6', '0', '9', '8', '5', '2'];
-        let iter = 0;
-        while (true) {
-            switch (iterlist[iter++]) {
-                case "0":
-                    tiny[arg1].style.width = "2px";
-                    continue;
-                case "1":
-                    tiny_remaining_ticks[arg1] = 60;
-                    continue;
-                case "2":
-                    tiny[arg1].style.visibility = "visible";
-                    continue;
-                case "3":
-                    tiny_x[arg1] = star_x[arg1];
-                    continue;
-                case "4":
-                    tiny_y[arg1] = star_y[arg1];
-                    continue;
-                case "5":
-                    star[arg1].style.visibility = "hidden";
-                    continue;
-                case "6":
-                    tiny[arg1].style.left = star_x[arg1] + "px";
-                    continue;
-                case "7":
-                    tiny[arg1].style.top = star_y[arg1] + "px";
-                    continue;
-                case "8":
-                    tiny[arg1].style.backgroundColor = star[arg1].childNodes[0].style.backgroundColor;
-                    continue;
-                case "9":
-                    tiny[arg1].style.height = "2px";
-                    continue;
-            }
-            break;
-        }
+
+    if (star_y[i] + 3 < doc_height && star_x[i] + 3 < doc_width) {
+        tiny_remaining_ticks[i] = sparkle_lifetime * 2;
+        tiny_y[i] = star_y[i];
+        tiny[i].style.top = star_y[i] + "px";
+        tiny_x[i] = star_x[i];
+        tiny[i].style.left = star_x[i] + "px";
+        tiny[i].style.width = "2px";
+        tiny[i].style.height = "2px";
+        tiny[i].style.backgroundColor = star[i].childNodes[0].style.backgroundColor;
+        star[i].style.visibility = "hidden";
+        tiny[i].style.visibility = "visible";
     }
-    star_remaining_ticks[arg1] = null;
-    star[arg1].style.left = "0px";
-    star[arg1].style.top = "0px";
-    star[arg1].style.visibility = "hidden";
+
+    star_remaining_ticks[i] = null;
+    star[i].style.left = "0px";
+    star[i].style.top = "0px";
+    star[i].style.visibility = "hidden";
 }
 
-function update_tiny(arg1) {
-    const iterlist = ['1', '11', '10', '4', '3', '5', '9', '8', '6', '0', '2', '7'];
-    let iter = 0;
-
-    while (true) {
-        switch (iterlist[iter++]) {
-            case "0":
-                tiny[arg1].style.left = "0px";
-                continue;
-            case "1":
-                if (tiny_remaining_ticks[arg1] === null) {
-                    return false;
-                }
-                continue;
-            case "2":
-                tiny[arg1].style.visibility = "hidden";
-                continue;
-            case "3":
-                continue;
-            case "4":
-                if (tiny_remaining_ticks[arg1] === 30) {
-                    tiny[arg1].style.width = "1px";
-                    tiny[arg1].style.height = "1px";
-                }
-                continue;
-            case "5":
-                if (tiny_remaining_ticks[arg1] > 0) {
-                    tiny_y[arg1] += 1 + 2 * Math.random();
-                    tiny_x[arg1] += (arg1 % 4 - 2) / 4;
-                    if (tiny_y[arg1] + 3 < doc_height && tiny_x[arg1] + 3 < doc_width) {
-                        tiny[arg1].style.top = tiny_y[arg1] + "px";
-                        tiny[arg1].style.left = tiny_x[arg1] + "px";
-                        return true;
-                    }
-                }
-                continue;
-            case "6":
-                tiny[arg1].style.top = "0px";
-                continue;
-            case "7":
-                return false;
-            case "8":
-                tiny_remaining_ticks[arg1] = null;
-                continue;
-            case "9":
-                continue;
-            case "10":
-                tiny_remaining_ticks[arg1] -= 1;
-                continue;
-            case "11":
-                continue;
-        }
-        break;
+function update_tiny(i) {
+    if (tiny_remaining_ticks[i] === null) {
+        return false;
     }
+
+    tiny_remaining_ticks[i] -= 1;
+
+    if (tiny_remaining_ticks[i] === sparkle_lifetime) {
+        tiny[i].style.width = "1px";
+        tiny[i].style.height = "1px";
+    }
+
+    if (tiny_remaining_ticks[i] > 0) {
+        tiny_y[i] += 1 + 2 * Math.random();
+        tiny_x[i] += (i % 4 - 2) / 4;
+
+        if (tiny_y[i] + 3 < doc_height && tiny_x[i] + 3 < doc_width) {
+            tiny[i].style.top = tiny_y[i] + "px";
+            tiny[i].style.left = tiny_x[i] + "px";
+            return true
+        }
+    }
+
+    tiny_remaining_ticks[i] = null;
+    tiny[i].style.top = '0px';
+    tiny[i].style.left = '0px';
+    tiny[i].style.visibility = "hidden";
+    return false
 }
